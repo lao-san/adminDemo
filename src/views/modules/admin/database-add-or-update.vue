@@ -8,58 +8,23 @@
       <el-tab-pane label="合金介绍">
         <basics ref="basics"></basics>
       </el-tab-pane>
+      <el-tab-pane label="物理性能">
+        <physical-data ref="physical"></physical-data>
+      </el-tab-pane>
+      <el-tab-pane label="力学性能">
+        <data-mechanics ref="mechanics"></data-mechanics>
+      </el-tab-pane>
+      <el-tab-pane label="工艺要求">
+        <data-craft ref="craft"></data-craft>
+      </el-tab-pane>
+      <el-tab-pane label="组织结构">
+        <data-structure ref="structure"></data-structure>
+      </el-tab-pane>
+      <el-tab-pane label="防腐性">
+        <data-corrosion ref="corrosion"></data-corrosion>
+      </el-tab-pane>
     </el-tabs>
-    <!-- 
-    <el-form
-      :model="dataForm"
-      :rules="dataRule"
-      ref="dataForm"
-      @keyup.enter.native="dataFormSubmit()"
-      label-width="80px"
-    >
-      <el-form-item label="材料牌号" prop="code">
-        <el-input v-model="dataForm.code" placeholder="材料牌号"></el-input>
-      </el-form-item>
-      <el-form-item label="材料类型id" prop="categoryId">
-        <el-input v-model="dataForm.categoryId" placeholder="材料类型id"></el-input>
-      </el-form-item>
-      <el-form-item label="关键词" prop="keyword">
-        <el-input v-model="dataForm.keyword" placeholder="关键词"></el-input>
-      </el-form-item>
-      <el-form-item label="标题图" prop="image">
-        <el-input v-model="dataForm.image" placeholder="标题图"></el-input>
-      </el-form-item>
-      <el-form-item label="参考文献" prop="references">
-        <el-input v-model="dataForm.references" placeholder="参考文献"></el-input>
-      </el-form-item>
-      <el-form-item label="来源" prop="source">
-        <el-input v-model="dataForm.source" placeholder="来源"></el-input>
-      </el-form-item>
-      <el-form-item label="作者" prop="author">
-        <el-input v-model="dataForm.author" placeholder="作者"></el-input>
-      </el-form-item>
-      <el-form-item label="材料概述" prop="overview">
-        <el-input v-model="dataForm.overview" placeholder="材料概述"></el-input>
-      </el-form-item>
-      <el-form-item label="材料标准" prop="standard">
-        <el-input v-model="dataForm.standard" placeholder="材料标准"></el-input>
-      </el-form-item>
-      <el-form-item label="熔炼工艺" prop="meltingProcess">
-        <el-input v-model="dataForm.meltingProcess" placeholder="熔炼工艺"></el-input>
-      </el-form-item>
-      <el-form-item label="化学成分" prop="chemicalComposition">
-        <el-input v-model="dataForm.chemicalComposition" placeholder="化学成分"></el-input>
-      </el-form-item>
-      <el-form-item label="热处理制度" prop="heatTreatment">
-        <el-input v-model="dataForm.heatTreatment" placeholder="热处理制度"></el-input>
-      </el-form-item>
-      <el-form-item label="熔炼工艺" prop="mainSpecifications">
-        <el-input v-model="dataForm.mainSpecifications" placeholder="熔炼工艺"></el-input>
-      </el-form-item>
-      <el-form-item label="供应状态" prop="supplyStatus">
-        <el-input v-model="dataForm.supplyStatus" placeholder="供应状态"></el-input>
-      </el-form-item>
-    </el-form>-->
+
     <span slot="footer" class="dialog-footer">
       <el-button @click="visible = false">取消</el-button>
       <el-button type="primary" @click="dataFormSubmit()">确定</el-button>
@@ -69,6 +34,11 @@
 
 <script>
 import Basics from "../../../components/data/basics1";
+import PhysicalData from "../../../components/data/physical-data";
+import DataMechanics from "../../../components/data/data-mechanics";
+import DataCraft from "../../../components/data/data-craft";
+import DataStructure from "../../../components/data/data-structure";
+import DataCorrosion from "../../../components/data/data-corrosion";
 
 export default {
   data() {
@@ -78,18 +48,6 @@ export default {
         id: 0,
         code: "",
         categoryId: "",
-        keyword: "",
-        image: "",
-        references: "",
-        source: "",
-        author: "",
-        overview: "",
-        standard: "",
-        meltingProcess: "",
-        chemicalComposition: "",
-        heatTreatment: "",
-        mainSpecifications: "",
-        supplyStatus: "",
       },
       dataRule: {
         code: [
@@ -133,7 +91,7 @@ export default {
   },
   methods: {
     init(id, tabId) {
-      console.log(tabId);
+      // console.log(tabId);
       this.dataForm.id = id || 0;
       this.visible = true;
       this.$nextTick(() => {
@@ -145,65 +103,66 @@ export default {
             params: this.$http.adornParams(),
           }).then(({ data }) => {
             if (data && data.code === 0) {
-              this.$refs.basics.init(data.data.dataBase,tabId);
+              this.$refs.basics.init(data.data.dataBase, tabId);
+              this.$refs.physical.init(data.data.dataPhysical, tabId);
+              this.$refs.mechanics.init(data.data.dataMechanics, tabId);
+              this.$refs.craft.init(data.data.dataCraft, tabId);
+              this.$refs.corrosion.init(data.data.dataCorrosion, tabId);
+              this.$refs.structure.init(data.data.dataStructure, tabId);
             }
           });
-        }else {
-           this.$refs.basics.init("",tabId);
-           console.log(this.$refs.basics.dataForm)
+        } else {
+          this.$refs.basics.init("", tabId);
+          this.$refs.physical.init("", tabId);
+          this.$refs.mechanics.init("", tabId);
+          this.$refs.craft.init("", tabId);
+          this.$refs.corrosion.init("", tabId);
+          this.$refs.structure.init("", tabId);
         }
       });
     },
     // 表单提交
     dataFormSubmit() {
-      this.$refs["dataForm"].validate((valid) => {
-        if (valid) {
-          this.$http({
-            url: this.$http.adornUrl(
-              `/admin/database/${!this.dataForm.id ? "save" : "update"}`
-            ),
-            method: "post",
-            data: this.$http.adornData({
-              id: this.dataForm.id || undefined,
-              code: this.dataForm.code,
-              categoryId: this.dataForm.categoryId,
-              keyword: this.dataForm.keyword,
-              image: this.dataForm.image,
-              references: this.dataForm.references,
-              source: this.dataForm.source,
-              author: this.dataForm.author,
-              overview: this.dataForm.overview,
-              standard: this.dataForm.standard,
-              meltingProcess: this.dataForm.meltingProcess,
-              chemicalComposition: this.dataForm.chemicalComposition,
-              heatTreatment: this.dataForm.heatTreatment,
-              mainSpecifications: this.dataForm.mainSpecifications,
-              supplyStatus: this.dataForm.supplyStatus,
-            }),
-          }).then(({ data }) => {
-            if (data && data.code === 0) {
-              this.$message({
-                message: "操作成功",
-                type: "success",
-                duration: 1500,
-                onClose: () => {
-                  this.visible = false;
-                  this.$emit("refreshDataList");
-                },
-              });
-            } else {
-              this.$message.error(data.msg);
-            }
+      this.$refs.structure.getContent();
+      this.$http({
+        url: this.$http.adornUrl(
+          `/admin/data/${!this.dataForm.id ? "save" : "update"}`
+        ),
+        method: "post",
+        data: this.$http.adornData({
+          dataBase: this.$refs.basics.dataForm,
+          dataPhysical: this.$refs.physical.dataForm,
+          dataMechanics: this.$refs.mechanics.dataForm,
+          dataCraft: this.$refs.craft.dataForm,
+          dataStructure: this.$refs.structure.dataForm,
+          dataCorrosion: this.$refs.corrosion.dataForm,
+        }),
+      }).then(({ data }) => {
+        if (data && data.code === 0) {
+          this.$message({
+            message: "操作成功",
+            type: "success",
+            duration: 1500,
+            onClose: () => {
+              this.visible = false;
+              this.$emit("refreshDataList");
+            },
           });
+        } else {
+          this.$message.error(data.msg);
         }
+        // console.log(this.$refs.basics.dataForm);
       });
     },
   },
   components: {
     Basics,
+    PhysicalData,
+    DataMechanics,
+    DataCraft,
+    DataStructure,
+    DataCorrosion,
   },
-  mounted(){
-   
-  }
+  mounted() {},
 };
 </script>

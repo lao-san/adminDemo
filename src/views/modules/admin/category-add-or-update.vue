@@ -80,7 +80,8 @@ export default {
       options: [],
     };
   },
-  mounted() {
+  mounted() {},
+  created() {
     this.getCategory();
   },
   methods: {
@@ -133,6 +134,7 @@ export default {
             }),
           }).then(({ data }) => {
             if (data && data.code === 0) {
+              location.reload();
               this.$message({
                 message: "操作成功",
                 type: "success",
@@ -155,7 +157,6 @@ export default {
         method: "get",
         params: this.$http.adornParams(),
       }).then(({ data }) => {
-        console.log(data.categoryList);
         this.options = this.getTreeData(data.categoryList);
       });
     },

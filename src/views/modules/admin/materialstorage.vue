@@ -6,19 +6,17 @@
       </el-form-item>
       <el-form-item>
         <el-button @click="getDataList()">查询</el-button>
-        <el-button v-if="isAuth('admin:data:save')" type="primary" @click="addOrUpdateHandleTT">新增</el-button>
         <el-button
-          v-if="isAuth('admin:data:delete')"
+          v-if="isAuth('admin:materialstorage:save')"
+          type="primary"
+          @click="addOrUpdateHandle()"
+        >新增</el-button>
+        <el-button
+          v-if="isAuth('admin:materialstorage:delete')"
           type="danger"
           @click="deleteHandle()"
           :disabled="dataListSelections.length <= 0"
         >批量删除</el-button>
-        <el-cascader
-          v-model="value"
-          :options="options"
-          style="margin-left:10px"
-          :props="defaultParams"
-        ></el-cascader>
       </el-form-item>
     </el-form>
     <el-table
@@ -30,15 +28,30 @@
     >
       <el-table-column type="selection" header-align="center" align="center" width="50"></el-table-column>
       <el-table-column prop="code" header-align="center" align="center" label="材料牌号"></el-table-column>
-      <el-table-column prop="categoryId" header-align="center" align="center" label="材料类型">
+      <el-table-column prop="categoryId" header-align="center" align="center" label="材料类别">
         <template slot-scope="scope">
           <div>{{listType2[scope.row.categoryId]}}</div>
         </template>
 
       </el-table-column>
-      <el-table-column prop="author" header-align="center" align="center" label="作者"></el-table-column>
-      <el-table-column prop="createTime" header-align="center" align="center" label="发布时间"></el-table-column>
-      <el-table-column prop="clicks" header-align="center" align="center" label="点击量"></el-table-column>
+      <el-table-column prop="system" header-align="center" align="center" label="材料体系"></el-table-column>
+      <el-table-column prop="name" header-align="center" align="center" label="材料名称"></el-table-column>
+      <el-table-column prop="technicalConditions" header-align="center" align="center" label="技术条件"></el-table-column>
+      <el-table-column prop="manufacturer" header-align="center" align="center" label="生产厂家"></el-table-column>
+      <el-table-column prop="partName" header-align="center" align="center" label="零件名称"></el-table-column>
+      <el-table-column prop="mainFunction" header-align="center" align="center" label="主要功能"></el-table-column>
+      <el-table-column prop="applicationSite" header-align="center" align="center" label="应用部位"></el-table-column>
+      <el-table-column prop="workingEnvironment" header-align="center" align="center" label="工况环境"></el-table-column>
+      <el-table-column
+        prop="failureModeMechanism"
+        header-align="center"
+        align="center"
+        label="失效模式与机理"
+      ></el-table-column>
+      <el-table-column prop="storageLife" header-align="center" align="center" label="保管期/年"></el-table-column>
+      <el-table-column prop="turnoverLife" header-align="center" align="center" label="周转期/年"></el-table-column>
+      <el-table-column prop="shelfLife" header-align="center" align="center" label="贮存期/年"></el-table-column>
+      <el-table-column prop="usageInformation" header-align="center" align="center" label="型号使用信息"></el-table-column>
       <el-table-column fixed="right" header-align="center" align="center" width="150" label="操作">
         <template slot-scope="scope">
           <el-button type="text" size="small" @click="addOrUpdateHandle(scope.row.id)">修改</el-button>
@@ -61,53 +74,43 @@
 </template>
 
 <script>
-import AddOrUpdate from "./database-add-or-update";
+import AddOrUpdate from "./materialstorage-add-or-update";
 export default {
   data() {
     return {
-      value: "",
       dataForm: {
         key: "",
       },
       dataList: [],
+      listType2:{},
       pageIndex: 1,
       pageSize: 10,
       totalPage: 0,
       dataListLoading: false,
       dataListSelections: [],
       addOrUpdateVisible: false,
-      options: [],
-      defaultParams: {
-        label: "name",
-        value: "id",
-        children: "list",
-      },
-      listType2:{}
     };
   },
   components: {
     AddOrUpdate,
   },
-  mounted() {
-    this.getName()
-
-  },
   activated() {
     this.getDataList();
-    this.getCategory();
+  },
+  mounted() {
+    this.getName()
   },
   methods: {
     // 获取数据列表
-    getDataList(value) {
+    getDataList() {
       this.dataListLoading = true;
       this.$http({
-        url: this.$http.adornUrl("/admin/data/list"),
+        url: this.$http.adornUrl("/admin/materialstorage/list"),
         method: "get",
         params: this.$http.adornParams({
           page: this.pageIndex,
           limit: this.pageSize,
           key: this.dataForm.key,
-          categoryId: value,
         }),
       }).then(({ data }) => {
         if (data && data.code === 0) {
@@ -120,6 +123,19 @@ export default {
         this.dataListLoading = false;
       });
     },
+    getName() {
+      this.$http({
+        url: this.$http.adornUrl("/admin/category/namelist"),
+        method: "get",
+        params: this.$http.adornParams(),
+      }).then(({ data }) => {
+        if (data && data.code === 0) {
+          this.listType2 = data.list
+        }
+      });
+    },
+   
+
     // 每页数
     sizeChangeHandle(val) {
       this.pageSize = val;
@@ -139,24 +155,9 @@ export default {
     addOrUpdateHandle(id) {
       this.addOrUpdateVisible = true;
       this.$nextTick(() => {
-        this.$refs.addOrUpdate.init(id, this.value[this.value.length - 1]);
+        this.$refs.addOrUpdate.init(id);
       });
     },
-    // 新建
-    addOrUpdateHandleTT() {
-      if (this.value) {
-        this.addOrUpdateVisible = true;
-        this.$nextTick(() => {
-          this.$refs.addOrUpdate.init(0, this.value[this.value.length - 1]);
-        });
-      } else {
-        this.$notify.error({
-          title: "错误",
-          message: "请选择栏目",
-        });
-      }
-    },
-
     // 删除
     deleteHandle(id) {
       var ids = id
@@ -174,7 +175,7 @@ export default {
         }
       ).then(() => {
         this.$http({
-          url: this.$http.adornUrl("/admin/data/delete"),
+          url: this.$http.adornUrl("/admin/materialstorage/delete"),
           method: "post",
           data: this.$http.adornData(ids, false),
         }).then(({ data }) => {
@@ -192,46 +193,6 @@ export default {
           }
         });
       });
-    },
-    // 获取栏目
-    getCategory() {
-      this.$http({
-        url: this.$http.adornUrl("/admin/category/treelist"),
-        method: "get",
-        params: this.$http.adornParams(),
-      }).then(({ data }) => {
-        this.options = this.getTreeData(data.list);
-      });
-    },
-    // 获取树形数据
-    getTreeData(data) {
-      // 循环遍历json数据
-      for (var i = 0; i < data.length; i++) {
-        if (data[i].list == null || data[i].list.length < 1) {
-          // children若为空数组，则将children设为undefined
-          data[i].list = undefined;
-        } else {
-          // children若不为空数组，则继续 递归调用 本方法
-          this.getTreeData(data[i].list);
-        }
-      }
-      return data;
-    },
-    getName() {
-      this.$http({
-        url: this.$http.adornUrl("/admin/category/namelist"),
-        method: "get",
-        params: this.$http.adornParams(),
-      }).then(({ data }) => {
-        if (data && data.code === 0) {
-          this.listType2 = data.list
-        }
-      });
-    },
-  },
-  watch: {
-    value(newValue, old) {
-      this.getDataList(newValue[newValue.length - 1]);
     },
   },
 };

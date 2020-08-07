@@ -1,6 +1,6 @@
 <template>
   <div class="mod-home">
-    <h3>项目介绍</h3>
+    <h3>材料数据网</h3>
    
   </div>
 </template>

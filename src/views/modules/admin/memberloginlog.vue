@@ -6,13 +6,9 @@
       </el-form-item>
       <el-form-item>
         <el-button @click="getDataList()">查询</el-button>
+      
         <el-button
-          v-if="isAuth('admin:category:save')"
-          type="primary"
-          @click="addOrUpdateHandle()"
-        >新增</el-button>
-        <el-button
-          v-if="isAuth('admin:category:delete')"
+          v-if="isAuth('admin:memberloginlog:delete')"
           type="danger"
           @click="deleteHandle()"
           :disabled="dataListSelections.length <= 0"
@@ -21,24 +17,15 @@
     </el-form>
     <el-table
       :data="dataList"
-      row-key="id"
       border
       v-loading="dataListLoading"
       @selection-change="selectionChangeHandle"
       style="width: 100%;"
     >
       <el-table-column type="selection" header-align="center" align="center" width="50"></el-table-column>
-      <el-table-column prop="name" header-align="center" align="center" label="材料类型名"></el-table-column>
-      <el-table-column prop="url" header-align="center" align="center" label="url路径"></el-table-column>
-      <el-table-column prop="last" header-align="center" align="center" label="是否为终极栏目"></el-table-column>
-      <el-table-column prop="remark" header-align="center" align="center" label="备注"></el-table-column>
-      <el-table-column prop="orderNum" header-align="center" align="center" label="排序"></el-table-column>
-      <el-table-column fixed="right" header-align="center" align="center" width="150" label="操作">
-        <template slot-scope="scope">
-          <el-button type="text" size="small" @click="addOrUpdateHandle(scope.row.id)">修改</el-button>
-          <el-button type="text" size="small" @click="deleteHandle(scope.row.id)">删除</el-button>
-        </template>
-      </el-table-column>
+      <el-table-column prop="userId" header-align="center" align="center" label="用户id"></el-table-column>
+      <el-table-column prop="loginTime" header-align="center" align="center" label="登录时间"></el-table-column>
+      <el-table-column prop="loginIp" header-align="center" align="center" label="登录ip"></el-table-column>
     </el-table>
     <el-pagination
       @size-change="sizeChangeHandle"
@@ -49,14 +36,11 @@
       :total="totalPage"
       layout="total, sizes, prev, pager, next, jumper"
     ></el-pagination>
-    <!-- 弹窗, 新增 / 修改 -->
-    <add-or-update v-if="addOrUpdateVisible" ref="addOrUpdate" @refreshDataList="getDataList"></add-or-update>
+
   </div>
 </template>
 
 <script>
-import AddOrUpdate from "./category-add-or-update";
-import { treeDataTranslate } from "@/utils";
 export default {
   data() {
     return {
@@ -73,7 +57,6 @@ export default {
     };
   },
   components: {
-    AddOrUpdate,
   },
   activated() {
     this.getDataList();
@@ -83,18 +66,22 @@ export default {
     getDataList() {
       this.dataListLoading = true;
       this.$http({
-        url: this.$http.adornUrl("/admin/category/list"),
+        url: this.$http.adornUrl("/admin/memberloginlog/list"),
         method: "get",
         params: this.$http.adornParams({
-          // 'page': this.pageIndex,
-          // 'limit': this.pageSize,
-          // 'key': this.dataForm.key
+          page: this.pageIndex,
+          limit: this.pageSize,
+          key: this.dataForm.key,
         }),
       }).then(({ data }) => {
         if (data && data.code === 0) {
-          this.dataList = treeDataTranslate(data.list, "id");
-          this.dataListLoading = false;
+          this.dataList = data.page.list;
+          this.totalPage = data.page.totalCount;
+        } else {
+          this.dataList = [];
+          this.totalPage = 0;
         }
+        this.dataListLoading = false;
       });
     },
     // 每页数
@@ -112,13 +99,7 @@ export default {
     selectionChangeHandle(val) {
       this.dataListSelections = val;
     },
-    // 新增 / 修改
-    addOrUpdateHandle(id) {
-      this.addOrUpdateVisible = true;
-      this.$nextTick(() => {
-        this.$refs.addOrUpdate.init(id);
-      });
-    },
+  
     // 删除
     deleteHandle(id) {
       var ids = id
@@ -136,7 +117,7 @@ export default {
         }
       ).then(() => {
         this.$http({
-          url: this.$http.adornUrl("/admin/category/delete"),
+          url: this.$http.adornUrl("/admin/memberloginlog/delete"),
           method: "post",
           data: this.$http.adornData(ids, false),
         }).then(({ data }) => {
